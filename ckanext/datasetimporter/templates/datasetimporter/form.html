@@ -1,0 +1,47 @@
+{% extends "page.html" %}
+
+{% block page_primary_action %}
+  <h1>✅ Hello from DatasetImporter!</h1>
+
+  <form method="post" enctype="multipart/form-data">
+    <label>Choose Folder:</label>
+    <input type="file" name="folder" webkitdirectory directory><br><br>
+
+
+    <label>Select Organization:</label>
+    <select name="organization" class="form-control">
+        {% for org in orgs %}
+          <option value="{{ org.id }}">{{ org.title or org.name }}</option>
+        {% endfor %}
+    </select>
+
+    <label>Repository Name:</label>
+    <input type="text" name="repo_name"><br><br>
+
+
+    <button type="submit">Submit</button>
+  </form>
+  <div id="status-box" style="margin-top: 20px;"></div>
+
+  <script>
+      const urlParams = new URLSearchParams(window.location.search);
+      const taskId = urlParams.get("task");
+  
+      if (taskId) {
+          const box = document.getElementById("status-box");
+          box.innerHTML = "⏳ Waiting for updates...";
+  
+          const interval = setInterval(() => {
+              fetch(`/datasetimporter/status?task=${taskId}`)
+                  .then(res => res.text())
+                  .then(text => {
+                      box.innerHTML = text;
+                      if (text.includes("✅ Done") || text.includes("❌ Error")) {
+                          clearInterval(interval);
+                      }
+                  });
+          }, 2000);
+      }
+  </script>
+  
+{% endblock %}

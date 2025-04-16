@@ -1,0 +1,14 @@
+# datasetimporter-js:
+#   filter: rjsmin
+#   output: ckanext-datasetimporter/%(version)s-datasetimporter.js
+#   contents:
+#     - js/datasetimporter.js
+#   extra:
+#     preload:
+#       - base/main
+
+# datasetimporter-css:
+#   filter: cssrewrite
+#   output: ckanext-datasetimporter/%(version)s-datasetimporter.css
+#   contents:
+#     - css/datasetimporter.css
