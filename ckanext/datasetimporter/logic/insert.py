@@ -1,10 +1,13 @@
 # ckanext/datasetimporter/logic/insert.py
 
-import os, json, uuid
+
+
+import os
+import json, uuid
 import psycopg2
 from datetime import datetime
 
-def process_folder(folder_path, organization_id, repo_name):
+def process_folder(folder_path, organization_id, repo_name, prefix="dataset_"):
     conn = psycopg2.connect(
         dbname="ckan",
         user="ckan",
@@ -35,89 +38,102 @@ def process_folder(folder_path, organization_id, repo_name):
             str(uuid.uuid4()), package_id, key, value
         ))
 
-    def insert_dataset_from_json(json_path, org_id, repo_name):
-        with open(json_path, "r", encoding="utf-8") as f:
-            raw = json.load(f)
-        result = raw.get("result", {})
+    def insert_dataset_from_json(json_path, organization_id, repo_name, prefix):
+        print(f"➡️ insert_dataset_from_json called with: {json_path}")
+        try:
+            with open(json_path, "r", encoding="utf-8") as f:
+                raw = json.load(f)
+            result = raw.get("result", {})
 
-        dataset_id = str(uuid.uuid4())
-        name = truncate(slugify("tytyty_" + result.get("id", str(uuid.uuid4()))), 100)
-        url = result.get("resource") or "https://example.com"
-        title = result.get("title", {}).get("en") or result.get("title", {}).get("de") or "Untitled"
-        description = result.get("description")
-        notes = (description.get("en") or description.get("de")) if isinstance(description, dict) else "No description"
+            dataset_id = str(uuid.uuid4())
+            name = truncate(slugify(prefix + result.get("id", str(uuid.uuid4()))), 100)
+            url = result.get("resource") or "https://example.com"
+            title = result.get("title", {}).get("en") or result.get("title", {}).get("de") or "Untitled"
+            description = result.get("description")
+            notes = (description.get("en") or description.get("de")) if isinstance(description, dict) else "No description"
 
-        creator = result.get("creator")
-        author = creator.get("name", "Unknown Author") if isinstance(creator, dict) else creator or "Unknown Author"
-        created = datetime.now()
-        owner_org = organization_id  # org_id will be passed as argument
+            creator = result.get("creator")
+            author = creator.get("name", "Unknown Author") if isinstance(creator, dict) else creator or "Unknown Author"
+            created = datetime.now()
+            owner_org = organization_id  # org_id will be passed as argument
 
+            print(f"🆔 Will use name = {name}")
 
-        cur.execute("SELECT 1 FROM package WHERE name = %s", (name,))
-        if cur.fetchone():
-            print(f"Dataset '{name}' already exists. Skipping.")
-            return
+            cur.execute("SELECT 1 FROM package WHERE name = %s", (name,))
+            if cur.fetchone():
+                print(f"Dataset '{name}' already exists. Skipping.")
+                return
+        
 
-        cur.execute("""
+            print(f"📦 Attempting to insert dataset: {name}")
+
+            cur.execute("""
             INSERT INTO package (
                 id, name, title, notes, author, url,
                 metadata_created, metadata_modified,
                 private, state, owner_org, type
             ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-        """, (
+                """ , (
             dataset_id, name, title, notes, author, url,
             created, created, False, 'active', owner_org, 'vdataset'
-        ))
+            ))
 
-        lang = 'Deutsch' if 'de' in (result.get("title") or {}) else 'English'
-        insert_extra(dataset_id, "repository_name", repo_name)
-        insert_extra(dataset_id, "language", lang)
-        for key in ['defined_in', 'doi', 'conformsTo']:
-            val = result.get(key)
-            if val:
-                insert_extra(dataset_id, key, val)
+            lang = 'Deutsch' if 'de' in (result.get("title") or {}) else 'English'
+            insert_extra(dataset_id, "repository_name", repo_name)
+            insert_extra(dataset_id, "language", lang)
+            for key in ['defined_in', 'doi', 'conformsTo']:
+                val = result.get(key)
+                if val:
+                    insert_extra(dataset_id, key, val)
 
-        publisher = result.get("publisher")
-        publisher_name = publisher.get("name", "Unknown") if isinstance(publisher, dict) else publisher or "Unknown"
-        insert_extra(dataset_id, "publisher", publisher_name)
+            publisher = result.get("publisher")
+            publisher_name = publisher.get("name", "Unknown") if isinstance(publisher, dict) else publisher or "Unknown"
+            insert_extra(dataset_id, "publisher", publisher_name)
 
-        location = result.get("spatial") or result.get("location")
-        if location:
-            insert_extra(dataset_id, "location", "Defined in GeoJSON")
+            location = result.get("spatial") or result.get("location")
+            if location:
+                insert_extra(dataset_id, "location", "Defined in GeoJSON")
 
-        # Resources
-        distributions = result.get("distributions", [])
-        if not isinstance(distributions, list):
-            distributions = []
+            # Resources
+            distributions = result.get("distributions", [])
+            if not isinstance(distributions, list):
+                distributions = []
 
-        for i, dist in enumerate(distributions):
-            res_id = str(uuid.uuid4())
-            res_name = dist.get("title", {}).get("en") or dist.get("title", {}).get("de") or f"Resource {i}"
-            res_desc = dist.get("description", {}).get("en") or dist.get("description", {}).get("de") or "No description"
-            res_format = dist.get("format", {}).get("label", "Unknown")
-            res_url = dist.get("access_url", [""])[0] if isinstance(dist.get("access_url"), list) else dist.get("access_url", "")
+            for i, dist in enumerate(distributions):
+                res_id = str(uuid.uuid4())
+                res_name = dist.get("title", {}).get("en") or dist.get("title", {}).get("de") or f"Resource {i}"
+                res_desc = dist.get("description", {}).get("en") or dist.get("description", {}).get("de") or "No description"
+                res_format = dist.get("format", {}).get("label", "Unknown")
+                res_url = dist.get("access_url", [""])[0] if isinstance(dist.get("access_url"), list) else dist.get("access_url", "")
 
-            cur.execute("""
+                cur.execute("""
                 INSERT INTO resource (
                     id, package_id, url, format, description,
                     name, created, last_modified, state, position
                 ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-            """, (
+            """ , (
                 res_id, dataset_id, res_url, res_format, res_desc,
                 res_name, created, created, 'active', i
-            ))
+                    ))
 
-        conn.commit()
-
+            
+            conn.commit()
+            print(f"✅ Successfully inserted dataset from {json_path}")
+        except Exception as e :
+            conn.rollback()
+            print(f"❌ Failed inserting dataset from {json_path}: {e}")    
+            log_skip(json_path, str(e))
     # Main loop
-    for file in os.listdir(folder_path):
-        if file.endswith(".json"):
-            json_path = os.path.join(folder_path, file)
-            try:
-                insert_dataset_from_json(json_path, organization_id, repo_name)
-            except Exception as e:
-                print(f"⚠️ Skipped {file}: {e}")
-                log_skip(file, str(e))
+    for root, dirs, files in os.walk(folder_path): 
+        for file in files:
+            if file.endswith(".json"):
+                json_path = os.path.join(root, file)
+                try:
+                    print(f"➡️ Processing {json_path}")
+                    insert_dataset_from_json(json_path, organization_id, repo_name, prefix)
+                except Exception as e:
+                    print(f"⚠️ Skipped {file}: {e}")
+                    log_skip(file, str(e))
 
     cur.close()
     conn.close()

@@ -1,47 +1,95 @@
 {% extends "page.html" %}
 
 {% block page_primary_action %}
-  <h1>✅ Hello from DatasetImporter!</h1>
+<h1 class="heading">Dataset Importer</h1>
 
-  <form method="post" enctype="multipart/form-data">
-    <label>Choose Folder:</label>
-    <input type="file" name="folder" webkitdirectory directory><br><br>
+<p class="lead">
+  This form allows you to upload a folder of JSON files, choose an organization, a prefix for your dataset collection, and specify a repository name. 
+  Once submitted, the datasets will be processed and indexed automatically.
+</p>
 
+<div class="panel panel-default">
+  <div class="panel-body">
 
-    <label>Select Organization:</label>
-    <select name="organization" class="form-control">
-        {% for org in orgs %}
-          <option value="{{ org.id }}">{{ org.title or org.name }}</option>
-        {% endfor %}
-    </select>
+    <form method="post" enctype="multipart/form-data" class="form-horizontal">
 
-    <label>Repository Name:</label>
-    <input type="text" name="repo_name"><br><br>
+      <!-- Step 1 -->
+      <div class="form-group">
+        <label class="control-label col-sm-2">Step 1</label>
+        <div class="col-sm-10">
+          <label><strong>📦 Upload your ZIP file containing JSONs</strong></label>
+          <input type="file" name="folder" class="form-control" accept=".zip" required>
+          <p class="help-block">Please compress your JSON files into a .zip file before uploading.</p>
+        </div>
+      </div>
 
+      <!-- Step 2 -->
+      <div class="form-group">
+        <label class="control-label col-sm-2">Step 2</label>
+        <div class="col-sm-10">
+          <label><strong>Select your organization</strong></label>
+          <select name="organization" class="form-control" required>
+            <option value="">-- Please choose --</option>
+            {% for org in orgs %}
+              <option value="{{ org.id }}">{{ org.title or org.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
 
-    <button type="submit">Submit</button>
-  </form>
-  <div id="status-box" style="margin-top: 20px;"></div>
+      <!-- Step 3 -->
+      <div class="form-group">
+        <label class="control-label col-sm-2">Step 3</label>
+        <div class="col-sm-10">
+          <label><strong>Dataset Name Prefix</strong></label>
+          <input type="text" name="prefix" class="form-control" placeholder="e.g. myproject_" required>
+          <p class="help-block">Give your dataset collection a prefix.</p>
+        </div>
+      </div>
+      
+      <!-- Step 4 -->
+      <div class="form-group">
+        <label class="control-label col-sm-2">Step 3</label>
+        <div class="col-sm-10">
+          <label><strong>Repository name</strong></label>
+          <input type="text" name="repo_name" class="form-control" placeholder="e.g. Eurostat - Employment" required>
+          <p class="help-block">Give your dataset collection a meaningful name.</p>
+        </div>
+      </div>
 
-  <script>
-      const urlParams = new URLSearchParams(window.location.search);
-      const taskId = urlParams.get("task");
-  
-      if (taskId) {
-          const box = document.getElementById("status-box");
-          box.innerHTML = "⏳ Waiting for updates...";
-  
-          const interval = setInterval(() => {
-              fetch(`/datasetimporter/status?task=${taskId}`)
-                  .then(res => res.text())
-                  .then(text => {
-                      box.innerHTML = text;
-                      if (text.includes("✅ Done") || text.includes("❌ Error")) {
-                          clearInterval(interval);
-                      }
-                  });
-          }, 2000);
-      }
-  </script>
-  
+      <!-- Submit -->
+      <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+          <button type="submit" class="btn btn-primary btn-lg">Submit and Start Import</button>
+        </div>
+      </div>
+
+    </form>
+
+    <!-- Live Status -->
+    <div id="status-box" class="alert alert-info" style="margin-top: 20px;"></div>
+  </div>
+</div>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const taskId = urlParams.get("task");
+
+  if (taskId) {
+    const box = document.getElementById("status-box");
+    box.innerHTML = "⏳ Upload submitted. Please wait...";
+
+    const interval = setInterval(() => {
+      fetch(`/datasetimporter/status?task=${taskId}`)
+        .then(res => res.text())
+        .then(text => {
+          box.innerHTML = text;
+          if (text.includes("✅ Done") || text.includes("❌ Error")) {
+            box.className = text.includes("✅ Done") ? "alert alert-success" : "alert alert-danger";
+            clearInterval(interval);
+          }
+        });
+    }, 2000);
+  }
+</script>
 {% endblock %}

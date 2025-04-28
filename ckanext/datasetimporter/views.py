@@ -1,4 +1,17 @@
+import sys
 import os
+
+# Ensure the LOG directory exists
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+log_dir = os.path.join(BASE_DIR, "LOG")
+os.makedirs(log_dir, exist_ok=True)
+log_file = os.path.join(log_dir, "views_log.txt")
+
+# Redirect stdout and stderr to the log file
+sys.stdout = open(log_file, "w", encoding="utf-8")
+sys.stderr = sys.stdout
+
+
 import subprocess
 import ckan.model as model
 from flask import Blueprint, request, redirect, flash
@@ -35,6 +48,7 @@ def show_form():
         task_status[task_id] = "Starting import…"
         uploaded_file = request.files.get("folder")
         organization = request.form.get("organization")
+        prefix = request.form.get("prefix")
         repo_name = request.form.get("repo_name")
 
         if not uploaded_file:
@@ -49,19 +63,26 @@ def show_form():
 # Determine extraction path here too
         if filename.endswith(".zip"):
           import zipfile
-          extract_path = os.path.join(upload_dir, os.path.splitext(filename)[0])
+          
           with zipfile.ZipFile(save_path, "r") as zip_ref:
+             extract_path = os.path.join(upload_dir, os.path.splitext(filename)[0])
              zip_ref.extractall(extract_path)
         else:
           extract_path = upload_dir
         
         def process_background(task_id, extract_path, organization, repo_name):
             try:
-    
+                
+                BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+                log_dir = os.path.join(BASE_DIR, "LOG")
+                os.makedirs(log_dir, exist_ok=True)
+                log_file = os.path.join(log_dir, "views_log.txt")
+                sys.stdout = open(log_file, "a", encoding="utf-8")
+                sys.stderr = sys.stdout
                 task_status[task_id] = "📦 Processing datasets…"
         
                 from ckanext.datasetimporter.logic.insert import process_folder
-                process_folder(extract_path, organization, repo_name)
+                process_folder(extract_path, organization, repo_name, prefix)
 
                 task_status[task_id] = "🔁 Reindexing CKAN…"
 
