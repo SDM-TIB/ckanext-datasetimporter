@@ -17,6 +17,7 @@ import ckan.model as model
 from flask import Blueprint, request, redirect, flash
 from ckan.plugins import toolkit
 from werkzeug.utils import secure_filename
+from ckan.plugins.toolkit import abort, check_access
 from ckan.common import config
 import threading
 import uuid
@@ -28,10 +29,17 @@ datasetimporter = Blueprint("datasetimporter", __name__)
 
 @datasetimporter.route("/datasetimporter/form", methods=["GET", "POST"])
 def show_form():
+    user = toolkit.c.user or toolkit.c.author or 'default'
+
+    try:
+        check_access('sysadmin', {'user': user})
+    except toolkit.NotAuthorized:
+        abort(403, 'This plugin is restricted to admin users. Contact your administrator for access.')
+
     context = {
         'model': model,
         'session': model.Session,
-        'user': toolkit.c.user or toolkit.c.author or 'default'
+        'user': user
     }
 
     # GET logic first (to avoid crashing if POST fails)
@@ -97,7 +105,11 @@ def show_form():
                 task_status[task_id] = f"❌ Error: {str(e)}"
 
         threading.Thread(target=process_background, args=(task_id, extract_path, organization, repo_name)).start()
-        return redirect(f"/datasetimporter/status?task={task_id}")         
+        return toolkit.render(
+            "datasetimporter/form.html",
+            extra_vars={"orgs": orgs, "task_id": task_id}
+        )
+         
 
     return toolkit.render("datasetimporter/form.html", extra_vars={"orgs": orgs})
 

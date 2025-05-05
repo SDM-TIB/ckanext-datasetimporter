@@ -1,17 +1,25 @@
 {% extends "page.html" %}
 
+{% if task_id %}
+  <div class="alert alert-info">
+     To track your import progress later, bookmark this link: <br>
+    <code>{{ h.url_for('/datasetimporter/status', qualified=true) }}?task={{ task_id }}</code>
+  </div>
+{% endif %}
+
+
 {% block page_primary_action %}
 <h1 class="heading">Dataset Importer</h1>
 
 <p class="lead">
-  This form allows you to upload a folder of JSON files, choose an organization, a prefix for your dataset collection, and specify a repository name. 
-  Once submitted, the datasets will be processed and indexed automatically.
+  Upload your datasets as a zipped folder, select the organization, prefix, and repository name. 
+  After submitting, you can either stay on this page or save the link to track the progress later.
 </p>
 
 <div class="panel panel-default">
   <div class="panel-body">
 
-    <form method="post" enctype="multipart/form-data" class="form-horizontal">
+    <form id="import-form" method="post" enctype="multipart/form-data" class="form-horizontal">
 
       <!-- Step 1 -->
       <div class="form-group">
@@ -46,10 +54,10 @@
           <p class="help-block">Give your dataset collection a prefix.</p>
         </div>
       </div>
-      
+
       <!-- Step 4 -->
       <div class="form-group">
-        <label class="control-label col-sm-2">Step 3</label>
+        <label class="control-label col-sm-2">Step 4</label>
         <div class="col-sm-10">
           <label><strong>Repository name</strong></label>
           <input type="text" name="repo_name" class="form-control" placeholder="e.g. Eurostat - Employment" required>
@@ -67,29 +75,18 @@
     </form>
 
     <!-- Live Status -->
-    <div id="status-box" class="alert alert-info" style="margin-top: 20px;"></div>
+    <div id="status-box" class="alert alert-info" style="margin-top: 20px; display:none;"></div>
+
+    <!-- Progress Link -->
+    <div id="progress-link" class="alert alert-warning" style="margin-top: 20px; display:none;">
+      <p><strong>🔗 Track your import progress here:</strong></p>
+      <p id="link-text"></p>
+      <button onclick="copyLink()">Copy Link</button>
+    </div>
+
   </div>
 </div>
 
-<script>
-  const urlParams = new URLSearchParams(window.location.search);
-  const taskId = urlParams.get("task");
+<script src="/js/form_logic.js"></script>
 
-  if (taskId) {
-    const box = document.getElementById("status-box");
-    box.innerHTML = "⏳ Upload submitted. Please wait...";
-
-    const interval = setInterval(() => {
-      fetch(`/datasetimporter/status?task=${taskId}`)
-        .then(res => res.text())
-        .then(text => {
-          box.innerHTML = text;
-          if (text.includes("✅ Done") || text.includes("❌ Error")) {
-            box.className = text.includes("✅ Done") ? "alert alert-success" : "alert alert-danger";
-            clearInterval(interval);
-          }
-        });
-    }, 2000);
-  }
-</script>
 {% endblock %}
