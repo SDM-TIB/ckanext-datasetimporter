@@ -1,1 +1,22 @@
-Indexing dataset 1/1
+Indexing dataset 1/5Indexing dataset 2/5Indexing dataset 3/5Indexing dataset 4/5Indexing dataset 5/5➡️ Processing /srv/app/tmp/tt/levelims-ramis-201500162.json
+➡️ insert_dataset_from_json called with: /srv/app/tmp/tt/levelims-ramis-201500162.json
+🆔 Will use name = newtest11s1_llllllevelims-ramis-201500162
+📦 Attempting to insert dataset: newtest11s1_llllllevelims-ramis-201500162
+✅ Successfully inserted dataset from /srv/app/tmp/tt/levelims-ramis-201500162.json
+➡️ Processing /srv/app/tmp/tt/levelims-ramis-201500161.json
+➡️ insert_dataset_from_json called with: /srv/app/tmp/tt/levelims-ramis-201500161.json
+🆔 Will use name = newtest11s1_llllllevelims-ramis-201500161
+📦 Attempting to insert dataset: newtest11s1_llllllevelims-ramis-201500161
+✅ Successfully inserted dataset from /srv/app/tmp/tt/levelims-ramis-201500161.json
+➡️ Processing /srv/app/tmp/tt/levelims-ramis-201500160.json
+➡️ insert_dataset_from_json called with: /srv/app/tmp/tt/levelims-ramis-201500160.json
+🆔 Will use name = newtest11s1_llllllevelims-ramis-201500160
+📦 Attempting to insert dataset: newtest11s1_llllllevelims-ramis-201500160
+✅ Successfully inserted dataset from /srv/app/tmp/tt/levelims-ramis-201500160.json
+➡️ Processing /srv/app/tmp/tt/levelims-ramis-201500163.json
+➡️ insert_dataset_from_json called with: /srv/app/tmp/tt/levelims-ramis-201500163.json
+🆔 Will use name = newtest11s1_llllllevelims-ramis-201500163
+📦 Attempting to insert dataset: newtest11s1_llllllevelims-ramis-201500163
+✅ Successfully inserted dataset from /srv/app/tmp/tt/levelims-ramis-201500163.json
+✅ Loaded 11 organizations.
+✅ Loaded 11 organizations.

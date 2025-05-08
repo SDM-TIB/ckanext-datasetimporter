@@ -14,7 +14,7 @@ sys.stderr = sys.stdout
 
 import subprocess
 import ckan.model as model
-from flask import Blueprint, request, redirect, flash
+from flask import Blueprint, request, redirect, flash, jsonify
 from ckan.plugins import toolkit
 from werkzeug.utils import secure_filename
 from ckan.plugins.toolkit import abort, check_access
@@ -95,8 +95,8 @@ def show_form():
                 task_status[task_id] = "🔁 Reindexing CKAN…"
 
                 subprocess.run([
-    "ckan", "-c", "/root/ckan/etc/default/ckan.ini", "search-index", "rebuild", "-o"
-])
+                      "ckan", "-c", "/root/ckan/etc/default/ckan.ini", "search-index", "rebuild", "-o"
+                    ])
 
 
                 task_status[task_id] = "✅ Done! Datasets are now available."
@@ -105,10 +105,7 @@ def show_form():
                 task_status[task_id] = f"❌ Error: {str(e)}"
 
         threading.Thread(target=process_background, args=(task_id, extract_path, organization, repo_name)).start()
-        return toolkit.render(
-            "datasetimporter/form.html",
-            extra_vars={"orgs": orgs, "task_id": task_id}
-        )
+        return jsonify({"task_id": task_id})
          
 
     return toolkit.render("datasetimporter/form.html", extra_vars={"orgs": orgs})
@@ -117,4 +114,9 @@ def show_form():
 def check_status():
     task_id = request.args.get("task")
     status = task_status.get(task_id, "Unknown task ID.")
-    return status
+
+    return toolkit.render(
+        "datasetimporter/status.html",
+        extra_vars={"status": status, "task_id": task_id}
+    )
+

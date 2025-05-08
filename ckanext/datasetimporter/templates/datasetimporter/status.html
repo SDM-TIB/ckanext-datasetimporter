@@ -1,0 +1,12 @@
+{% extends "page.html" %}
+
+{% block page_primary_action %}
+  <h1>Importation Status</h1>
+
+  <div class="alert alert-info">
+    {{ status }}
+  </div>
+
+  <p><a href="/datasetimporter/status?task={{ task_id }}" class="btn btn-default">🔁 Refresh</a></p>
+  <p><a href="/" class="btn btn-primary">Back to Homepage</a></p>
+{% endblock %}

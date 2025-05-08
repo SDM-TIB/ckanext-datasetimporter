@@ -6,6 +6,9 @@ import os
 import json, uuid
 import psycopg2
 from datetime import datetime
+#import logging
+
+#log = logging.getLogger(__name__)
 
 def process_folder(folder_path, organization_id, repo_name, prefix="dataset_"):
     conn = psycopg2.connect(
