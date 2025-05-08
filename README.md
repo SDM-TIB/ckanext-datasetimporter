@@ -7,7 +7,7 @@ A CKAN plugin to import multiple JSON-based datasets in bulk by uploading a ZIP 
 ## 👤 User Guide
 
 ### 1. Access the Import Page
-Only admin users can access the DatasetImporter interface. You'll find a new button near the "+ Add Dataset" button.
+Only admin users can access the DatasetImporter interface. You'll find a new button near the "Batch Import" button.
 
 ### 2. Fill the Form
 You will need to:
@@ -36,7 +36,7 @@ After clicking Submit:
 
 1. Clone this plugin into your extensions directory:
    ```bash
-   git clone <repo-url> ckanext-datasetimporter
+   git clone https://github.com/SDM-TIB/ckanext-datasetimporter ckanext-datasetimporter
    ```
 
 2. Install the plugin:
