@@ -94,6 +94,3 @@ Contributions are welcome. Fork the repo and open a pull request.
 
 ---
 
-## 📜 License
-
-MIT License
