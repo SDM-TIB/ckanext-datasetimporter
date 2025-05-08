@@ -56,6 +56,15 @@ After clicking Submit:
 
 5. (Optional) Create the `/srv/app/tmp` and `LOG/` folders if not present.
 
+6. Overwrite the following file to integrate the DatasetImporter button:
+   Replace:
+   ```
+   src/ckanext-gitImport/ckanext/gitimport/templates/snippets/add_dataset.html
+   ```
+   with:
+   ```
+   additions/add_dataset.html
+
 ---
 
 ## 📁 Plugin Structure
